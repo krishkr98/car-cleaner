@@ -4,7 +4,7 @@ import api from "../../api/axios";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState(null);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [history, setHistory] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,8 @@ const Dashboard = () => {
           api.get("/tasks/history"),
           api.get("/notifications"),
         ]);
-        setSubscription(subRes.data);
+        const subs = Array.isArray(subRes.data) ? subRes.data : subRes.data ? [subRes.data] : [];
+        setSubscriptions(subs);
         setHistory(histRes.data.slice(0, 3));
         setNotifications(notifRes.data.filter((n) => !n.isRead).slice(0, 3));
       } catch (err) {
@@ -50,20 +51,47 @@ const Dashboard = () => {
         </p>
       </div>
 
-{/* Stats */}
-<div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-4">
-  {[
-    { label: "Subscriptions", value: Array.isArray(subscription) ? subscription.length : subscription ? 1 : 0, color: "text-green-600" },
-    { label: "Package", value: Array.isArray(subscription) && subscription.length > 0 ? subscription.map(s => s.packageType).join(", ") : subscription?.packageType || "—" },
-    { label: "Cars Subscribed", value: Array.isArray(subscription) ? subscription.length : subscription ? 1 : 0 },
-    { label: "Next Renewal", value: Array.isArray(subscription) && subscription.length > 0 ? new Date(subscription[0].renewalDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : subscription ? new Date(subscription.renewalDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—" },
-  ].map((s) => (
-    <div key={s.label} className="bg-gray-50 rounded-xl p-4">
-      <div className="text-xs text-gray-500 mb-1">{s.label}</div>
-      <div className={`text-lg font-semibold ${s.color || "text-gray-900"}`}>{s.value}</div>
-    </div>
-  ))}
-</div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-4">
+        {[
+          { label: "Active Subscriptions", value: subscriptions.length, color: subscriptions.length > 0 ? "text-green-600" : "text-red-500" },
+          { label: "Cars Subscribed", value: subscriptions.length },
+          { label: "Total Monthly", value: subscriptions.length > 0 ? `₹${subscriptions.reduce((a, s) => a + (s.pricePerMonth || 0), 0)}` : "—" },
+          { label: "Next Renewal", value: subscriptions.length > 0 ? new Date(subscriptions[0].renewalDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—" },
+        ].map((s) => (
+          <div key={s.label} className="bg-gray-50 rounded-xl p-4">
+            <div className="text-xs text-gray-500 mb-1">{s.label}</div>
+            <div className={`text-lg font-semibold ${s.color || "text-gray-900"}`}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Active Subscriptions */}
+      {subscriptions.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
+          <div className="font-semibold text-gray-900 mb-3">Active Subscriptions</div>
+          <div className="space-y-2">
+            {subscriptions.map((s) => (
+              <div key={s._id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                <div className="text-2xl">
+                  {s.car?.type === "SUV" ? "🛻" : s.car?.type === "Sedan" ? "🚙" : "🚗"}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-sm text-gray-900">
+                    {s.car?.brand} {s.car?.model}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {s.packageType} · {s.timeSlot} · ₹{s.pricePerMonth}/mo
+                  </div>
+                </div>
+                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+                  Active
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Last cleaned */}
       {lastCleaned && (
@@ -74,11 +102,14 @@ const Dashboard = () => {
             <div className="text-sm text-green-700">
               {lastCleaned.car?.brand} {lastCleaned.car?.model} · By{" "}
               {lastCleaned.employee?.name || "Agent"} ·{" "}
-              {new Date(lastCleaned.completedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+              {new Date(lastCleaned.completedAt).toLocaleTimeString("en-IN", {
+                hour: "2-digit", minute: "2-digit",
+              })}
             </div>
           </div>
           {lastCleaned.proofImage && (
-            <img src={lastCleaned.proofImage} alt="proof" className="w-14 h-14 rounded-lg object-cover" />
+            <img src={lastCleaned.proofImage} alt="proof"
+              className="w-14 h-14 rounded-lg object-cover" />
           )}
         </div>
       )}
@@ -102,12 +133,15 @@ const Dashboard = () => {
       )}
 
       {/* No subscription */}
-      {!subscription && (
+      {subscriptions.length === 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center">
           <div className="text-3xl mb-2">🚗</div>
           <div className="font-semibold text-blue-900 mb-1">No active subscription</div>
-          <div className="text-sm text-blue-700 mb-4">Subscribe to start getting your car cleaned daily!</div>
-          <a href="/subscription" className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+          <div className="text-sm text-blue-700 mb-4">
+            Subscribe to start getting your car cleaned daily!
+          </div>
+          <a href="/subscription"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
             Subscribe Now
           </a>
         </div>
