@@ -50,20 +50,20 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-4">
-        {[
-          { label: "Subscription", value: subscription ? "Active" : "None", color: subscription ? "text-green-600" : "text-red-500" },
-          { label: "Package", value: subscription?.packageType || "—" },
-          { label: "Time Slot", value: subscription?.timeSlot || "—" },
-          { label: "Renews", value: subscription ? new Date(subscription.renewalDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—" },
-        ].map((s) => (
-          <div key={s.label} className="bg-gray-50 rounded-xl p-4">
-            <div className="text-xs text-gray-500 mb-1">{s.label}</div>
-            <div className={`text-lg font-semibold ${s.color || "text-gray-900"}`}>{s.value}</div>
-          </div>
-        ))}
-      </div>
+{/* Stats */}
+<div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-4">
+  {[
+    { label: "Subscriptions", value: Array.isArray(subscription) ? subscription.length : subscription ? 1 : 0, color: "text-green-600" },
+    { label: "Package", value: Array.isArray(subscription) && subscription.length > 0 ? subscription.map(s => s.packageType).join(", ") : subscription?.packageType || "—" },
+    { label: "Cars Subscribed", value: Array.isArray(subscription) ? subscription.length : subscription ? 1 : 0 },
+    { label: "Next Renewal", value: Array.isArray(subscription) && subscription.length > 0 ? new Date(subscription[0].renewalDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : subscription ? new Date(subscription.renewalDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—" },
+  ].map((s) => (
+    <div key={s.label} className="bg-gray-50 rounded-xl p-4">
+      <div className="text-xs text-gray-500 mb-1">{s.label}</div>
+      <div className={`text-lg font-semibold ${s.color || "text-gray-900"}`}>{s.value}</div>
+    </div>
+  ))}
+</div>
 
       {/* Last cleaned */}
       {lastCleaned && (
