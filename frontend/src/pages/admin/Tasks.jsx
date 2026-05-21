@@ -1,64 +1,43 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axios";
 
-const AssignTask = () => {
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [employees, setEmployees] = useState([]);
+const AdminTasks = () => {
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    subscriptionId: "",
-    employeeId: "",
-    scheduledDate: "",
-  });
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchTasks = async () => {
       try {
-        const [subRes, empRes] = await Promise.all([
-          api.get("/admin/subscriptions"),
-          api.get("/admin/employees"),
-        ]);
-        setSubscriptions(subRes.data.filter((s) => s.status === "active"));
-        setEmployees(empRes.data);
+        const { data } = await api.get("/admin/tasks");
+        setTasks(data);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchTasks();
   }, []);
 
-  const selectedSub = subscriptions.find((s) => s._id === form.subscriptionId);
-
-  const handleSubmit = async () => {
-    if (!form.subscriptionId || !form.employeeId || !form.scheduledDate) {
-      setError("Please fill in all fields");
-      return;
-    }
-    setSubmitting(true);
-    setError("");
-    setSuccess("");
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
     try {
-      await api.post("/admin/tasks", {
-        customerId: selectedSub.customer._id,
-        employeeId: form.employeeId,
-        carId: selectedSub.car._id,
-        scheduledDate: form.scheduledDate,
-        timeSlot: selectedSub.timeSlot,
-        subscriptionId: form.subscriptionId,
-      });
-      setSuccess("Task assigned successfully! Employee will see it in their task list.");
-      setForm({ subscriptionId: "", employeeId: "", scheduledDate: "" });
+      await api.delete(`/admin/tasks/${id}`);
+      setTasks(tasks.filter((t) => t._id !== id));
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to assign task");
-    } finally {
-      setSubmitting(false);
+      console.error(err);
     }
   };
+
+  const filtered = tasks
+    .filter((t) => filter === "all" || t.status === filter)
+    .filter((t) =>
+      search === "" ||
+      t.customer?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      t.employee?.name?.toLowerCase().includes(search.toLowerCase())
+    );
 
   if (loading) {
     return (
@@ -69,100 +48,97 @@ const AssignTask = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Assign Task</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Assign a cleaning task to an employee
-        </p>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">All Tasks</h1>
+          <p className="text-sm text-gray-500 mt-1">{tasks.length} total tasks</p>
+        </div>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by customer or employee..."
+          className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm mb-4">{error}</div>
-      )}
-      {success && (
-        <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm mb-4">{success}</div>
-      )}
-
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
-
-        {/* Select Subscription */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Customer Subscription
-          </label>
-          <select
-            value={form.subscriptionId}
-            onChange={(e) => setForm({ ...form, subscriptionId: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <div className="flex gap-2 mb-6">
+        {["all", "assigned", "completed", "missed"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize ${
+              filter === f
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
           >
-            <option value="">-- Select a subscription --</option>
-            {subscriptions.map((s) => (
-              <option key={s._id} value={s._id}>
-                {s.customer?.name} · {s.car?.brand} {s.car?.model} ({s.car?.licensePlate}) · {s.timeSlot}
-              </option>
-            ))}
-          </select>
-        </div>
+            {f} ({f === "all" ? tasks.length : tasks.filter((t) => t.status === f).length})
+          </button>
+        ))}
+      </div>
 
-        {/* Show selected subscription details */}
-        {selectedSub && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-            <div className="font-semibold text-blue-900 mb-2">Subscription Details</div>
-            <div className="grid grid-cols-2 gap-2 text-blue-800">
-              <span>👤 {selectedSub.customer?.name}</span>
-              <span>📍 {selectedSub.customer?.address}</span>
-              <span>🚗 {selectedSub.car?.brand} {selectedSub.car?.model}</span>
-              <span>🔢 {selectedSub.car?.licensePlate}</span>
-              <span>📦 {selectedSub.packageType}</span>
-              <span>⏰ {selectedSub.timeSlot}</span>
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <div className="text-5xl mb-3">📋</div>
+          <p>No tasks found.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((t) => (
+            <div key={t._id} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <div className="font-semibold text-gray-900">{t.customer?.name}</div>
+                  <div className="text-sm text-gray-500">📍 {t.customer?.address}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+                    t.status === "completed" ? "bg-green-100 text-green-700" :
+                    t.status === "missed" ? "bg-red-100 text-red-700" :
+                    "bg-orange-100 text-orange-700"
+                  }`}>
+                    {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
+                  </span>
+                  <button
+                    onClick={() => handleDelete(t._id)}
+                    className="text-red-400 hover:text-red-600 text-sm px-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3 sm:grid-cols-4">
+                <span>🚗 {t.car?.brand} {t.car?.model}</span>
+                <span>🔢 {t.car?.licensePlate}</span>
+                <span>⏰ {t.timeSlot}</span>
+                <span>📅 {new Date(t.scheduledDate).toLocaleDateString("en-IN", {
+                  day: "numeric", month: "short", year: "numeric"
+                })}</span>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <div className="text-sm">
+                  👷 Employee:{" "}
+                  <span className="font-medium text-gray-900">
+                    {t.employee?.name || "Not assigned"}
+                  </span>
+                  {t.employee?.area && (
+                    <span className="text-gray-400"> · {t.employee.area}</span>
+                  )}
+                </div>
+                {t.status === "completed" && t.proofImage && (
+                  <a href={t.proofImage} target="_blank" rel="noreferrer"
+                    className="text-blue-600 text-sm hover:underline">
+                    📷 View Proof
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Select Employee */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Assign to Employee
-          </label>
-          <select
-            value={form.employeeId}
-            onChange={(e) => setForm({ ...form, employeeId: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">-- Select an employee --</option>
-            {employees.map((e) => (
-              <option key={e._id} value={e._id}>
-                {e.name} {e.area ? `· ${e.area}` : "· No area assigned"}
-              </option>
-            ))}
-          </select>
+          ))}
         </div>
-
-        {/* Select Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Scheduled Date
-          </label>
-          <input
-            type="date"
-            value={form.scheduledDate}
-            min={new Date().toISOString().split("T")[0]}
-            onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50"
-        >
-          {submitting ? "Assigning..." : "✅ Assign Task to Employee"}
-        </button>
-      </div>
+      )}
     </div>
   );
 };
 
-export default AssignTask;
+export default AdminTasks;
