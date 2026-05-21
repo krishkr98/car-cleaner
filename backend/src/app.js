@@ -25,6 +25,7 @@ app.use("/api/cars", require("./routes/cars"));
 app.use("/api/subscriptions", require("./routes/subscriptions"));
 app.use("/api/tasks", require("./routes/tasks"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/admin", require("./routes/admin"));
 
 // Health check
 app.get("/api/health", (_, res) =>

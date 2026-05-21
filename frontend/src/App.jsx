@@ -18,6 +18,12 @@ import Tasks from "./pages/employee/Tasks";
 import Completed from "./pages/employee/Completed";
 import Profile from "./pages/employee/Profile";
 
+import AdminDashboard from "./pages/admin/Dashboard";
+import Customers from "./pages/admin/Customers";
+import Employees from "./pages/admin/Employees";
+import AdminTasks from "./pages/admin/Tasks";
+import AssignTask from "./pages/admin/AssignTask";
+
 const App = () => {
   return (
     <AuthProvider>
@@ -32,46 +38,47 @@ const App = () => {
 
           {/* Customer */}
           <Route path="/dashboard" element={
-            <ProtectedRoute role="customer">
-              <Dashboard />
-            </ProtectedRoute>
+            <ProtectedRoute role="customer"><Dashboard /></ProtectedRoute>
           } />
           <Route path="/cars" element={
-            <ProtectedRoute role="customer">
-              <Cars />
-            </ProtectedRoute>
+            <ProtectedRoute role="customer"><Cars /></ProtectedRoute>
           } />
           <Route path="/subscription" element={
-            <ProtectedRoute role="customer">
-              <Subscription />
-            </ProtectedRoute>
+            <ProtectedRoute role="customer"><Subscription /></ProtectedRoute>
           } />
           <Route path="/history" element={
-            <ProtectedRoute role="customer">
-              <History />
-            </ProtectedRoute>
+            <ProtectedRoute role="customer"><History /></ProtectedRoute>
           } />
           <Route path="/notifications" element={
-            <ProtectedRoute role="customer">
-              <Notifications />
-            </ProtectedRoute>
+            <ProtectedRoute role="customer"><Notifications /></ProtectedRoute>
           } />
 
           {/* Employee */}
           <Route path="/employee/tasks" element={
-            <ProtectedRoute role="employee">
-              <Tasks />
-            </ProtectedRoute>
+            <ProtectedRoute role="employee"><Tasks /></ProtectedRoute>
           } />
           <Route path="/employee/completed" element={
-            <ProtectedRoute role="employee">
-              <Completed />
-            </ProtectedRoute>
+            <ProtectedRoute role="employee"><Completed /></ProtectedRoute>
           } />
           <Route path="/employee/profile" element={
-            <ProtectedRoute role="employee">
-              <Profile />
-            </ProtectedRoute>
+            <ProtectedRoute role="employee"><Profile /></ProtectedRoute>
+          } />
+
+          {/* Admin */}
+          <Route path="/admin" element={
+            <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
+          } />
+          <Route path="/admin/customers" element={
+            <ProtectedRoute role="admin"><Customers /></ProtectedRoute>
+          } />
+          <Route path="/admin/employees" element={
+            <ProtectedRoute role="admin"><Employees /></ProtectedRoute>
+          } />
+          <Route path="/admin/tasks" element={
+            <ProtectedRoute role="admin"><AdminTasks /></ProtectedRoute>
+          } />
+          <Route path="/admin/assign" element={
+            <ProtectedRoute role="admin"><AssignTask /></ProtectedRoute>
           } />
 
           {/* Fallback */}

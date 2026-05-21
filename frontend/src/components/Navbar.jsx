@@ -48,6 +48,17 @@ const Navbar = () => {
             <button onClick={handleLogout} className="text-sm bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200">Logout</button>
           </>
         )}
+
+        {user?.role === "admin" && (
+          <>
+            <Link to="/admin" className="text-sm text-gray-600 hover:text-blue-600">Dashboard</Link>
+            <Link to="/admin/assign" className="text-sm text-gray-600 hover:text-blue-600">Assign</Link>
+            <Link to="/admin/tasks" className="text-sm text-gray-600 hover:text-blue-600">Tasks</Link>
+            <Link to="/admin/customers" className="text-sm text-gray-600 hover:text-blue-600">Customers</Link>
+            <Link to="/admin/employees" className="text-sm text-gray-600 hover:text-blue-600">Employees</Link>
+            <button onClick={handleLogout} className="text-sm bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200">Logout</button>
+          </>
+        )}
       </div>
     </nav>
   );
