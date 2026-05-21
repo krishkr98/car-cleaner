@@ -8,9 +8,14 @@ exports.getEmployeeTasks = async (req, res) => {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get today's tasks AND any pending tasks
     const tasks = await Task.find({
       employee: req.user._id,
-      scheduledDate: { $gte: today, $lt: tomorrow },
+      $or: [
+        { scheduledDate: { $gte: today, $lt: tomorrow } },
+        { status: "assigned" }
+      ]
     })
       .populate("customer", "name email phone address")
       .populate("car");
