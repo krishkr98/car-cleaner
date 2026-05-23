@@ -92,14 +92,7 @@ exports.assignTask = async (req, res) => {
       .populate("employee", "name email")
       .populate("car");
 
-    // Notify customer
-    await Notification.create({
-      user: customerId,
-      task: task._id,
-      title: "Cleaning Scheduled!",
-      message: `Your car cleaning has been scheduled for ${new Date(scheduledDate).toLocaleDateString("en-IN")} ${timeSlot}.`,
-      type: "general",
-    });
+
 
     res.status(201).json(populated);
   } catch (err) {
