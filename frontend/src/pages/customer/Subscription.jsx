@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import api from "../../api/axios";
 
 const PACKAGES = [
-  { type: "Hatchback", price: 499, icon: "🚗", desc: "Perfect for small cars" },
-  { type: "Sedan", price: 459, icon: "🚙", desc: "Great value for sedans" },
-  { type: "SUV", price: 599, icon: "🛻", desc: "Full coverage for SUVs" },
+  { type: "Hatchback", price: 599, icon: "🚗", desc: "Perfect for small cars" },
+  { type: "Sedan", price: 599, icon: "🚙", desc: "Great value for sedans" },
+  { type: "SUV", price: 699, icon: "🛻", desc: "Full coverage for SUVs" },
 ];
 
 const SLOTS = ["Before 5 AM", "Before 6 AM", "Before 7 AM", "Before 8 AM", "Before 9 AM"];
